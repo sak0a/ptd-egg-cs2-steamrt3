@@ -1,0 +1,188 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2023-11-22T17:03:21+01:00",
+    "name": "Counter-Strike 2 (SteamRT3) modified:saka",
+    "author": "infra@gflclan.com",
+    "description": "Counter-Strike is a multiplayer first-person shooter video game developed by Valve. This image is based on Valve's Steam Runtime 3 platform (codenamed SNIPER) and was created to run both CSGO and CS2 without issues.",
+    "features": [
+        "gsl_token",
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "SteamRT3": "ghcr.io\/1zc\/steamrt3-pterodactyl:latest",
+        "SteamRT3-PublicBeta": "ghcr.io\/1zc\/steamrt3-pterodactyl:beta-latest",
+        "SteamRT3-Dev": "ghcr.io\/1zc\/steamrt3-pterodactyl:dev",
+        "SteamRT3-PublicBetaDev": "ghcr.io\/1zc\/steamrt3-pterodactyl:beta-dev"
+    },
+    "file_denylist": [],
+    "startup": ".\/game\/cs2.sh -dedicated $( [ \"$VAC_ENABLED\" == \"1\" ] || printf %s ' -insecure' ) +ip 0.0.0.0 -port {{SERVER_PORT}} -tv_port {{TV_PORT}} -maxplayers {{SRCDS_MAXPLAYERS}} $( [ \"$RCON_ENABLED\" == \"0\" ] || printf %s ' -usercon' ) $( [ -z \"{{GAME_ALIAS}}\" ] && echo \"+game_mode {{GAME_MODE}} +game_type {{GAME_TYPE}}\" || echo \"+game_alias {{GAME_ALIAS}}\" ) +map {{SRCDS_MAP}} +hostname \"{{SERVER_NAME}}\" $( [ -z \"{{SERVER_PASSWORD}}\" ] || printf %s ' +sv_password \"{{SERVER_PASSWORD}}\"' ) +rcon_password \"{{RCON_PASSWORD}}\" +sv_setsteamaccount {{STEAM_ACC}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Connection to Steam servers successful\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\n## just in case someone removed the defaults.\r\nif [ \"${STEAM_USER}\" == \"\" ]; then\r\nSTEAM_USER=anonymous\r\nSTEAM_PASS=\"\"\r\nSTEAM_AUTH=\"\"\r\nfi\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\nmkdir -p \/mnt\/server\/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd \/mnt\/server\/steamcmd\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n## install game using steamcmd\r\n.\/steamcmd.sh +force_install_dir \/mnt\/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +app_update ${SRCDS_APPID} ${EXTRA_FLAGS} +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n## set up 32 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n## set up 64 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk64\r\ncp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so",
+            "container": "ghcr.io\/pterodactyl\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Map",
+            "description": "The default map for the server.",
+            "env_variable": "SRCDS_MAP",
+            "default_value": "de_dust2",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|alpha_dash",
+            "field_type": "text"
+        },
+        {
+            "name": "Source AppID",
+            "description": "NOT VISIBLE TO USERS. DO NOT EDIT.",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "730",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|numeric",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Players",
+            "description": "The maximum number of players the server can host.",
+            "env_variable": "SRCDS_MAXPLAYERS",
+            "default_value": "64",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric",
+            "field_type": "text"
+        },
+        {
+            "name": "Disable Updates",
+            "description": "Set to 1 to stop updates.",
+            "env_variable": "SRCDS_STOP_UPDATE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric",
+            "field_type": "text"
+        },
+        {
+            "name": "SourceTV Port",
+            "description": "SourceTV port used for connections to spectates games on your server.",
+            "env_variable": "TV_PORT",
+            "default_value": "27020",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|integer|between:1025,65535",
+            "field_type": "text"
+        },
+        {
+            "name": "Validate Install",
+            "description": "Toggles SteamCMD validation of game server files. Set to 0 to disable.",
+            "env_variable": "SRCDS_VALIDATE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric",
+            "field_type": "text"
+        },
+        {
+            "name": "Game Server Login Token (GSLT)",
+            "description": "The Steam Account Token required for the server to be displayed publicly. https:\/\/steamcommunity.com\/dev\/managegameservers",
+            "env_variable": "STEAM_ACC",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "max:32|nullable",
+            "field_type": "text"
+        },
+        {
+            "name": "Enable VAC",
+            "description": "Enable \/ Disable VAC (Valve Anti Cheat) on your server. By default this will be enabled.",
+            "env_variable": "VAC_ENABLED",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "Enable RCON",
+            "description": "Enable \/ Disable RCON for using RCON commands with external tools. By default this will be disabled.",
+            "env_variable": "RCON_ENABLED",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Name",
+            "description": "Sets the server name listed in the steam server browser.",
+            "env_variable": "SERVER_NAME",
+            "default_value": "A Pterodactyl hosted CS2 Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:64",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Password",
+            "description": "If specified, players must provide this password to join the server.",
+            "env_variable": "SERVER_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|alpha_dash|between:1,30",
+            "field_type": "text"
+        },
+        {
+            "name": "RCON Password",
+            "description": "To gain access to administrator commands on the server.",
+            "env_variable": "RCON_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|alpha_dash|between:1,30",
+            "field_type": "text"
+        },
+        {
+            "name": "Gamemode",
+            "description": "Defines the Gamemode and Gametype to be set at the start of the next round.\r\nExamples:\r\n\r\nCompetitive:\r\ngame_mode 1\r\ngame_type 0\r\n\r\nWingman:\r\ngame_mode 2\r\ngame_type 0\r\n\r\nCasual:\r\ngame_mode 0\r\ngame_type 0\r\n\r\nDeathmatch:\r\ngame_mode 2\r\ngame_type 1\r\n\r\nArms Race:\r\ngame_mode 0\r\ngame_type 1\r\n\r\nCustom:\r\ngame_mode 0\r\ngame_type 3",
+            "env_variable": "GAME_MODE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Gametype",
+            "description": "Defines the Gamemode and Gametype to be set at the start of the next round.\r\nExamples:\r\n\r\nCompetitive:\r\ngame_mode 1\r\ngame_type 0\r\n\r\nWingman:\r\ngame_mode 2\r\ngame_type 0\r\n\r\nCasual:\r\ngame_mode 0\r\ngame_type 0\r\n\r\nDeathmatch:\r\ngame_mode 2\r\ngame_type 1\r\n\r\nArms Race:\r\ngame_mode 0\r\ngame_type 1\r\n\r\nCustom:\r\ngame_mode 0\r\ngame_type 3",
+            "env_variable": "GAME_TYPE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Game Alias",
+            "description": "Defines the game alias for the server (See https://developer.valvesoftware.com/wiki/Counter-Strike_2/Dedicated_Servers) Warning: Overwrites manual game_mode and game_type settings. Valid options are: \r\ncompetitive, \r\nwingman, \r\ndeathmatch, \r\ncustom, \r\ncasual",
+            "env_variable": "GAME_ALIAS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:16",
+            "field_type": "text"
+        }
+    ]
+}
