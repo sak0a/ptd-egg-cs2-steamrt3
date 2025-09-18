@@ -5,8 +5,8 @@
         "update_url": null
     },
     "exported_at": "2023-11-22T17:03:21+01:00",
-    "name": "Counter-Strike 2 (SteamRT3) modified:saka",
-    "author": "github.com/sak0a",
+    "name": "Counter-Strike 2 (SteamRT3) modified:saka-try",
+    "author": "saka@sakoa.xyz",
     "description": "Counter-Strike is a multiplayer first-person shooter video game developed by Valve. This image is based on Valve's Steam Runtime 3 platform (codenamed SNIPER) and was created to run both CSGO and CS2 without issues.",
     "features": [
         "gsl_token",
@@ -151,7 +151,7 @@
             "default_value": "",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|alpha_dash|between:1,30",
+            "rules": "nullable|alpha_dash|between:1,30",
             "field_type": "text"
         },
         {
@@ -181,7 +181,7 @@
             "default_value": "",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|string|max:16",
+            "rules": "nullable|string|max:16",
             "field_type": "text"
         }
     ]
